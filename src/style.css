@@ -65,7 +65,7 @@ main section[id] { scroll-margin-top:88px; }
 .motion-ready .reveal:not(.visible) {
  opacity:0;
  transform:translate3d(0,32px,0);
- transition: opacity .72s cubic-bezier(.22,.68,.2,1), transform .72s cubic-bezier(.22,.68,.2,1) !important;
+ transition: opacity .72s cubic-bezier(.22,.68,.2,1), transform .72s cubic-bezier(.22,.68,.2,1);
  transition-delay:var(--reveal-delay,0ms) !important;
  will-change:opacity,transform;
 }
