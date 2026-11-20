@@ -29,26 +29,37 @@ const reviews=[
 function App(){
  const[menu,setMenu]=useState(false),[active,setActive]=useState(''),[tier,setTier]=useState('all'),[selected,setSelected]=useState('');
  useEffect(()=>{
-  const nodes=Array.from(document.querySelectorAll('.reveal:not(.master-card)'));
+  const selector='.reveal:not(.master-card)';
+  const observed=new WeakSet();
+
+  const observer=new IntersectionObserver((entries)=>{
+   entries.forEach(entry=>{
+    entry.target.classList.toggle('is-visible',entry.isIntersecting);
+   });
+  },{root:null,rootMargin:'-5% 0px -5% 0px',threshold:0.01});
+
+  const register=(root)=>{
+   const elements=[];
+   if(root instanceof Element && root.matches(selector)) elements.push(root);
+   if(root.querySelectorAll) elements.push(...root.querySelectorAll(selector));
+   elements.forEach(element=>{
+    if(observed.has(element)) return;
+    observed.add(element);
+    element.classList.add('scroll-reveal');
+    observer.observe(element);
+   });
+  };
+
+  register(document);
+  const mutations=new MutationObserver(records=>{
+   records.forEach(record=>record.addedNodes.forEach(node=>{
+    if(node.nodeType===Node.ELEMENT_NODE) register(node);
+   }));
+  });
+  mutations.observe(document.body,{childList:true,subtree:true});
+
   const sections=Array.from(document.querySelectorAll('main section[id]'));
   let raf=0;
-  let observer=null;
-
-  nodes.forEach((node,index)=>node.style.setProperty('--reveal-delay',`${(index%4)*55}ms`));
-
-  // Enable the hidden state only for content blocks, never for interactive master cards.
-  document.documentElement.classList.add('motion-ready');
-  if('IntersectionObserver' in window){
-   observer=new IntersectionObserver((entries)=>{
-    entries.forEach(entry=>{
-     entry.target.classList.toggle('visible',entry.isIntersecting);
-    });
-   },{root:null,rootMargin:'-4% 0px -7% 0px',threshold:0});
-   nodes.forEach(node=>observer.observe(node));
-  } else {
-   nodes.forEach(node=>node.classList.add('visible'));
-  }
-
   const updateActive=()=>{
    raf=0;
    const marker=window.innerHeight*.38;
@@ -65,24 +76,25 @@ function App(){
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll,{passive:true});
   updateActive();
+
   return()=>{
-   observer?.disconnect();
-   document.documentElement.classList.remove('motion-ready');
+   observer.disconnect();
+   mutations.disconnect();
    if(raf) window.cancelAnimationFrame(raf);
    window.removeEventListener('scroll',onScroll);
    window.removeEventListener('resize',onScroll);
   };
  },[]);
- const go=id=>{
-  setMenu(false);
-  const target=document.getElementById(id);
-  if(!target) return;
-  const header=document.querySelector('.header');
-  const offset=(header?.getBoundingClientRect().height || 0)+12;
-  const top=target.getBoundingClientRect().top+window.scrollY-offset;
-  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  window.scrollTo({top,behavior:reduce?'auto':'smooth'});
- };
+
+ const go = id => {
+  const target = document.getElementById(id);
+  if (!target) return;
+  target.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+  setActive(id);
+};
  return <><div className="noise"/><header className="header"><a className="brand" href="#top" onClick={e=>{e.preventDefault();go('top')}}><span className="brand-symbol">К<span>07</span></span><span>КУЛЬТУРА<small>БАРБЕРШОП · КАЗАНЬ</small></span></a><nav className={menu?'nav open':'nav'}>{[['about','О нас'],['works','Работы'],['services','Прайс'],['team','Мастера'],['reviews','Отзывы'],['contacts','Контакты']].map(([id,t])=><a key={id} className={active===id?'active':''} href={'#'+id} onClick={e=>{e.preventDefault();go(id)}}>{t}</a>)}</nav><a className="head-cta" href="tel:+79196437876">ЗАПИСАТЬСЯ <ArrowUpRight size={15}/></a><button className="menu-btn" onClick={()=>setMenu(!menu)} aria-label="Открыть меню">{menu?<X/>:<Menu/>}</button></header>
  <main id="top"><section className="hero"><div className="hero-bg"/><div className="hero-copy"><div className="eyebrow"><i/> КАЗАНЬ · АГРОНОМИЧЕСКАЯ, 16</div><h1>СТИЛЬ — ЭТО<br/><em>КУЛЬТУРА.</em></h1><p>Барбершоп для тех, кто ценит характер, точность и собственный стиль. Не просто стрижём — создаём образ, который тебе подходит.</p><div className="hero-actions"><a className="btn gold" href="tel:+79196437876">Записаться на визит <ArrowUpRight size={17}/></a><a className="simple-link" href="#works" onClick={e=>{e.preventDefault();go('works')}}>Смотреть работы <span>↓</span></a></div><div className="hero-proof"><div className="rating-stars">★★★★★</div><b>5.0</b><span>175 оценок на Яндекс Картах</span></div></div><div className="hero-portrait"><img src="/alexander.png" alt="Александр, барбер Культура 07"/><div className="portrait-label"><span>КУЛЬТУРА 07</span><b>CRAFT / CULTURE / CHARACTER</b></div><div className="hero-round">K<br/><small>07</small></div></div><div className="hero-foot"><span>01 — 06</span><span>ЛИСТАЙ ВНИЗ <ChevronDown size={14}/></span><span>EST. KAZAN</span></div></section>
  <section className="intro section" id="about"><div className="kicker reveal">01 / О ПРОСТРАНСТВЕ</div><div className="intro-layout"><h2 className="reveal">МЕСТО,<br/><em>ГДЕ ФОРМИРУЕТСЯ</em><br/>ХАРАКТЕР.</h2><div className="intro-copy reveal"><p>«Культура 07» — барбершоп в Казани с собственной атмосферой и вниманием к индивидуальности. Здесь можно спокойно обсудить желаемый результат и доверить образ мастеру.</p><p>Классический подход, современные техники и уважение к деталям — от первой консультации до финальной укладки.</p><a className="line-link" href={Y} target="_blank" rel="noreferrer">Открыть карточку на Яндекс Картах <ArrowUpRight size={15}/></a></div></div><div className="manifesto reveal"><span>01</span><p>НЕ ГОНЯЕМСЯ ЗА ТРЕНДАМИ.<br/><em>ПОДБИРАЕМ СТИЛЬ ПОД ТЕБЯ.</em></p><span>КАЗАНЬ · 2026</span></div></section>

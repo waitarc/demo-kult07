@@ -2,7 +2,6 @@
 @media(max-width:900px){.header{padding:0 5%}.nav{gap:13px}.nav a{font-size:8px}.hero{padding-left:7%;padding-right:7%;gap:5%}.section{padding-left:7%;padding-right:7%}.master-photo{height:300px}.master-grid{gap:10px}.contact{padding-left:7%;padding-right:7%}}
 @media(max-width:700px){.header{height:70px}.nav{display:none;position:absolute;top:69px;left:0;right:0;background:#06150e;padding:25px 7%;border-bottom:1px solid var(--line);flex-direction:column;gap:21px}.nav.open{display:flex}.nav a{font-size:11px}.head-cta{margin-left:auto;margin-right:15px;padding:10px;font-size:8px}.menu-btn{display:block}.hero{grid-template-columns:1fr;padding:60px 7% 75px;gap:36px}.hero-copy{padding:0}.hero-portrait{height:430px;margin:0 15px 10px 0}.hero-foot{left:7%;right:7%}.section{padding:80px 7%}.intro-layout,.contact{grid-template-columns:1fr;gap:30px}.intro-layout{margin:40px 0}.manifesto p{font-size:17px}.works-heading,.team-heading{display:block}.works-heading p,.team-heading p{margin-top:22px}.works-grid{grid-template-columns:1fr 1fr}.work-card,.work-1,.work-2{height:270px;margin:0}.work-2{grid-column:span 2;height:250px}.price-head{align-items:start}.price-head img{width:135px;max-height:210px}.price-row{grid-template-columns:minmax(120px,1fr) repeat(3,minmax(62px,.4fr));gap:6px;font-size:9px}.price-row.single{grid-template-columns:minmax(120px,1fr) minmax(70px,.4fr)}.price-row b{font-size:15px}.price-label{font-size:6px;letter-spacing:.7px}.tier-switch{gap:6px}.tier-switch>span{width:100%;margin-bottom:4px}.tier-switch button{font-size:8px;padding:8px}.master-grid{grid-template-columns:1fr 1fr;gap:22px 12px}.master-photo{height:320px}.reviews-top{display:block}.review-score{margin-top:25px}.review-grid{grid-template-columns:1fr}.review-card{min-height:unset}.contact{padding:0}.contact-panel{padding:52px 8%}.contact-image{min-height:340px}.contact-info{gap:18px}.mobile-book{position:fixed;z-index:25;bottom:12px;left:7%;right:7%;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--gold);color:#132017;padding:15px;font-size:10px;font-weight:800;letter-spacing:1.5px;box-shadow:0 8px 30px #0008}footer{padding:25px 7%;gap:14px;flex-wrap:wrap}footer>span{order:3;width:100%}}
 @media(max-width:430px){.brand{font-size:13px}.brand-symbol{width:32px;height:32px}.head-cta{font-size:7px;gap:4px}.hero h1{font-size:64px}.hero-portrait{height:360px}.hero-actions{gap:17px;flex-wrap:wrap}.section h2{font-size:49px}.works-grid{gap:8px}.work-card{height:230px}.work-2{height:220px}.work-overlay{padding:17px}.work-overlay h3{font-size:19px}.price-head img{width:112px}.price-row{grid-template-columns:minmax(108px,1fr) repeat(3,minmax(54px,.36fr));font-size:8px}.price-row.single{grid-template-columns:minmax(108px,1fr) minmax(62px,.36fr)}.price-row b{font-size:13px}.master-photo{height:255px}.master-meta h3{font-size:20px}.contact-info{flex-direction:column}.manifesto>span:last-child{display:none}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}.reveal{opacity:1;transform:none}}
 
 
 
@@ -13,15 +12,6 @@ main section[id] { scroll-margin-top:88px; }
 .nav a::after { content:""; position:absolute; left:0; right:0; bottom:-8px; height:1px; background:var(--gold); transform:scaleX(0); transform-origin:left; transition:transform .3s ease; }
 .nav a:hover::after,.nav a.active::after { transform:scaleX(1); }
 
-/* Content is visible by default. JS enables the animated state only after observer setup. */
-.reveal { opacity:1; transform:none; filter:none; }
-.motion-ready .reveal {
- opacity:0;
- transform:translateY(28px);
- transition:opacity .7s cubic-bezier(.22,.68,.2,1),transform .7s cubic-bezier(.22,.68,.2,1);
- transition-delay:var(--reveal-delay,0ms);
-}
-.motion-ready .reveal.visible { opacity:1; transform:translateY(0); }
 
 /* Stable accordion: animate a single grid row; never clip the card itself. */
 .master-card { min-width:0; cursor:pointer; }
@@ -53,25 +43,38 @@ main section[id] { scroll-margin-top:88px; }
 .work-card,.review-card { transition:transform .45s ease,border-color .3s ease; }
 .btn,.head-cta,.mobile-book { transition:transform .25s ease,background .25s ease,box-shadow .25s ease; }
 
-@media (prefers-reduced-motion:reduce) {
- html { scroll-behavior:auto; }
- .motion-ready .reveal,.motion-ready .reveal.visible { opacity:1;transform:none;transition:none; }
- .master-details,.master-details-inner,.master-details .master-note,.master-details-inner>a { transition:none!important; }
- *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important; }
+/* Reversible scroll reveal — adapted from the supplied Bonicolor project. */
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  filter: blur(3px);
+  transition:
+    opacity .7s cubic-bezier(.22,1,.36,1),
+    transform .8s cubic-bezier(.22,1,.36,1),
+    filter .7s cubic-bezier(.22,1,.36,1);
+  will-change: opacity, transform, filter;
+}
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: blur(0);
+}
+
+/* Master cards are interactive and deliberately excluded from scroll reveal. */
+.master-card {
+  opacity: 1;
+  transform: none;
+  filter: none;
 }
 
 
-/* Desktop/mobile scroll reveal: keep transitions active even when the OS requests reduced motion. */
-.motion-ready .reveal:not(.visible) {
- opacity:0;
- transform:translate3d(0,32px,0);
- transition: opacity .72s cubic-bezier(.22,.68,.2,1), transform .72s cubic-bezier(.22,.68,.2,1);
- transition-delay:var(--reveal-delay,0ms) !important;
- will-change:opacity,transform;
+/* Smooth scrolling for navigation links and in-page anchors. */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
 }
-.motion-ready .reveal.visible {
- opacity:1;
- transform:translate3d(0,0,0);
- transition: opacity .72s cubic-bezier(.22,.68,.2,1), transform .72s cubic-bezier(.22,.68,.2,1) !important;
- transition-delay:var(--reveal-delay,0ms) !important;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
