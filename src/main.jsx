@@ -32,31 +32,23 @@ function App(){
   const nodes=Array.from(document.querySelectorAll('.reveal:not(.master-card)'));
   const sections=Array.from(document.querySelectorAll('main section[id]'));
   let raf=0;
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let observer=null;
+
   nodes.forEach((node,index)=>node.style.setProperty('--reveal-delay',`${(index%4)*55}ms`));
-  if(!reduced && 'IntersectionObserver' in window){
-   const observer=new IntersectionObserver((entries)=>{
+
+  // Enable the hidden state only for content blocks, never for interactive master cards.
+  document.documentElement.classList.add('motion-ready');
+  if('IntersectionObserver' in window){
+   observer=new IntersectionObserver((entries)=>{
     entries.forEach(entry=>{
-     if(entry.isIntersecting){
-      entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
-     }
+     entry.target.classList.toggle('visible',entry.isIntersecting);
     });
-   },{root:null,rootMargin:'0px 0px -6% 0px',threshold:0});
+   },{root:null,rootMargin:'-4% 0px -7% 0px',threshold:0});
    nodes.forEach(node=>observer.observe(node));
-   document.documentElement.classList.add('motion-ready');
-   requestAnimationFrame(()=>{
-    nodes.forEach(node=>{
-     const rect=node.getBoundingClientRect();
-     if(rect.top < window.innerHeight && rect.bottom > 0){
-      node.classList.add('visible');
-      observer.unobserve(node);
-     }
-    });
-   });
   } else {
    nodes.forEach(node=>node.classList.add('visible'));
   }
+
   const updateActive=()=>{
    raf=0;
    const marker=window.innerHeight*.38;
@@ -67,11 +59,14 @@ function App(){
    });
    if(current) setActive(current);
   };
-  const onScroll=()=>{if(!raf) raf=window.requestAnimationFrame(updateActive)};
+  const onScroll=()=>{
+   if(!raf) raf=window.requestAnimationFrame(updateActive);
+  };
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll,{passive:true});
   updateActive();
   return()=>{
+   observer?.disconnect();
    document.documentElement.classList.remove('motion-ready');
    if(raf) window.cancelAnimationFrame(raf);
    window.removeEventListener('scroll',onScroll);

@@ -60,12 +60,18 @@ main section[id] { scroll-margin-top:88px; }
  *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important; }
 }
 
-/* Final stability overrides */
-.master-card { opacity:1!important; visibility:visible!important; transform:none!important; overflow:visible!important; }
-.master-card .master-details { display:grid; grid-template-rows:0fr; opacity:0; transform:translateY(-4px); transition:grid-template-rows .38s ease,opacity .28s ease,transform .38s ease; }
-.master-card .master-details-inner { min-height:0; overflow:hidden; }
-.master-card.expanded .master-details { grid-template-rows:1fr; opacity:1; transform:none; }
-.master-card .master-details-inner>a { max-height:0; opacity:0; overflow:hidden; transition:max-height .3s ease,opacity .25s ease,margin .3s ease; }
-.master-card.expanded .master-details-inner>a { max-height:40px; opacity:1; margin:6px 0 12px; }
-@media (max-width:700px) { .master-card { height:auto; min-height:0; } .master-details { position:relative; } }
-@media (prefers-reduced-motion:reduce) { .master-card .master-details,.master-card .master-details-inner>a { transition:none!important; } }
+
+/* Desktop/mobile scroll reveal: keep transitions active even when the OS requests reduced motion. */
+.motion-ready .reveal:not(.visible) {
+ opacity:0;
+ transform:translate3d(0,32px,0);
+ transition:opacity .72s cubic-bezier(.22,.68,.2,1) !important, transform .72s cubic-bezier(.22,.68,.2,1) !important;
+ transition-delay:var(--reveal-delay,0ms) !important;
+ will-change:opacity,transform;
+}
+.motion-ready .reveal.visible {
+ opacity:1;
+ transform:translate3d(0,0,0);
+ transition:opacity .72s cubic-bezier(.22,.68,.2,1) !important, transform .72s cubic-bezier(.22,.68,.2,1) !important;
+ transition-delay:var(--reveal-delay,0ms) !important;
+}
